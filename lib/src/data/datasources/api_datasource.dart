@@ -1,11 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models/user_model.dart';
-
-abstract class DatasourceRepository {
-  Future<UserModel?> login(String email, String password);
-  Future<UserModel> createUser(UserModel model);
-}
+import 'package:mingo/src/data/models/user_model.dart';
+import 'package:mingo/src/domain/repositories/datasource_repository.dart';
 
 class APIDatasource extends DatasourceRepository {
   final String baseUrl = 'http://10.0.2.2:3000'; 
@@ -29,7 +25,7 @@ class APIDatasource extends DatasourceRepository {
   }
 
   @override
-  Future<UserModel?> login(String email, String password) async {
+  Future<UserModel?> getUserByUsername(String email, String password) async {
     final url = Uri.parse('$baseUrl/users/login');
 
     final response = await http.post(
@@ -50,4 +46,28 @@ class APIDatasource extends DatasourceRepository {
       throw Exception('Error en login: ${response.body}');
     }
   }
+
+  @override
+  Future<UserModel?> setKnowledgeLevel(String knowledgeLevel, int userId) async {
+    final url = Uri.parse('$baseUrl/users/knowledge');
+
+    final res = await http.patch(
+      url,
+      body: jsonEncode({
+        'userId': userId,
+        'knowledgeLevel': knowledgeLevel,
+      })
+    );
+
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      return UserModel.fromJson(data['user'] ?? data); 
+    } else if (res.statusCode == 401) {
+      return null;
+    } else {
+      throw Exception('Error al asignar Nivel de Conocimiento: ${res.body}');
+    }
+  }
+
+
 }

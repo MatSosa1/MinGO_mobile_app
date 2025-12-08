@@ -4,6 +4,7 @@ class UserModel extends User {
   final String password;
 
   const UserModel({
+    super.id,
     required super.name,
     required super.email,
     required this.password,
@@ -13,6 +14,7 @@ class UserModel extends User {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
+      id: json['id'] as int,
       name: json['name'] as String,
       email: json['email'] as String,
       password: '', 

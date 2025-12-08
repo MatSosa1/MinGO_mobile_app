@@ -1,6 +1,7 @@
+import 'package:mingo/src/domain/repositories/datasource_repository.dart';
+
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/user_repository.dart';
-import '../datasources/api_datasource.dart';
 import '../models/user_model.dart';
 
 class UserRepositoryImpl extends UserRepository {
@@ -11,7 +12,7 @@ class UserRepositoryImpl extends UserRepository {
   @override
   Future<User?> loginUser(String email, String password) async {
     try {
-      final userModel = await datasource.login(email, password);
+      final userModel = await datasource.getUserByUsername(email, password);
       return userModel;
     } catch (e) {
       print('Error en loginUser: $e'); 
@@ -31,6 +32,27 @@ class UserRepositoryImpl extends UserRepository {
     } catch (e) {
       print('Error en registerUser: $e');
       rethrow;
+    }
+  }
+  
+  @override
+  Future<User?> setKnowledgeLevel(User user, int score) async {
+    String knowledgeLevel = 'Principiante';
+
+    if (score > 31) {
+      knowledgeLevel = 'Avanzado';
+    }
+    else if (score > 16) {
+      knowledgeLevel = 'Intermedio';
+    }
+
+    try {
+      final model = await datasource.setKnowledgeLevel(knowledgeLevel, user.id!);
+
+      return model;
+    } catch (e) {
+      print('Error: $e');
+      return null;
     }
   }
 }
