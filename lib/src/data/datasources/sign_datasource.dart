@@ -5,16 +5,14 @@ import '../models/sign_model.dart';
 
 class SignDataSourceImpl implements SignDataSource {
   final String baseUrl;
-  final http.Client client;
 
   SignDataSourceImpl({
     required this.baseUrl,
-    required this.client,
   });
 
   @override
   Future<SignModel> createSign(SignModel sign) async {
-    final response = await client.post(
+    final response = await http.post(
       Uri.parse('$baseUrl/signs'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(sign.toJson()),
@@ -29,7 +27,7 @@ class SignDataSourceImpl implements SignDataSource {
 
   @override
   Future<List<SignModel>> getAllSigns() async {
-    final response = await client.get(Uri.parse('$baseUrl/signs'));
+    final response = await http.get(Uri.parse('$baseUrl/signs'));
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
@@ -41,7 +39,7 @@ class SignDataSourceImpl implements SignDataSource {
 
   @override
   Future<SignModel?> getSignById(int id) async {
-    final response = await client.get(Uri.parse('$baseUrl/signs/$id'));
+    final response = await http.get(Uri.parse('$baseUrl/signs/$id'));
 
     if (response.statusCode == 200) {
       return SignModel.fromJson(jsonDecode(response.body));

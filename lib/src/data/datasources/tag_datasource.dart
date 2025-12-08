@@ -5,13 +5,12 @@ import '../models/tag_model.dart';
 
 class TagDataSourceImpl implements TagDataSource {
   final String baseUrl;
-  final http.Client client;
 
-  TagDataSourceImpl({required this.baseUrl, required this.client});
+  TagDataSourceImpl({required this.baseUrl});
 
   @override
   Future<TagModel> createTag(TagModel tag) async {
-    final response = await client.post(
+    final response = await http.post(
       Uri.parse('$baseUrl/tags'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(tag.toJson()),
@@ -26,7 +25,7 @@ class TagDataSourceImpl implements TagDataSource {
 
   @override
   Future<List<TagModel>> getAllTags() async {
-    final response = await client.get(Uri.parse('$baseUrl/tags'));
+    final response = await http.get(Uri.parse('$baseUrl/tags'));
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
@@ -38,7 +37,7 @@ class TagDataSourceImpl implements TagDataSource {
 
   @override
   Future<TagModel?> getTagById(int id) async {
-    final response = await client.get(Uri.parse('$baseUrl/tags/$id'));
+    final response = await http.get(Uri.parse('$baseUrl/tags/$id'));
 
     if (response.statusCode == 200) {
       return TagModel.fromJson(jsonDecode(response.body));
