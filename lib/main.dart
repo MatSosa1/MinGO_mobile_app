@@ -4,7 +4,7 @@ import 'package:mingo/src/presentation/pages/knowledge_form_page.dart';
 import 'package:mingo/src/presentation/pages/login_page.dart';
 import 'package:mingo/src/presentation/pages/register_page.dart';
 import 'package:provider/provider.dart';
-import 'src/data/datasources/api_datasource.dart';
+import 'src/data/datasources/user_datasource.dart';
 import 'src/data/repositories/user_repository_impl.dart';
 import 'src/domain/usecases/auth_usecases.dart';
 import 'src/presentation/providers/auth_provider.dart';

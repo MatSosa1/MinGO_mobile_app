@@ -4,16 +4,12 @@ import 'package:mingo/src/domain/repositories/sign_datasource_repository.dart';
 import '../models/sign_model.dart';
 
 class SignDataSourceImpl implements SignDataSource {
-  final String baseUrl;
-
-  SignDataSourceImpl({
-    required this.baseUrl,
-  });
+  final String baseUrl = 'http://10.0.2.2:3000/signs'; 
 
   @override
   Future<SignModel> createSign(SignModel sign) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/signs'),
+      Uri.parse('$baseUrl/'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(sign.toJson()),
     );
@@ -27,7 +23,7 @@ class SignDataSourceImpl implements SignDataSource {
 
   @override
   Future<List<SignModel>> getAllSigns() async {
-    final response = await http.get(Uri.parse('$baseUrl/signs'));
+    final response = await http.get(Uri.parse('$baseUrl/'));
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
@@ -39,7 +35,7 @@ class SignDataSourceImpl implements SignDataSource {
 
   @override
   Future<SignModel?> getSignById(int id) async {
-    final response = await http.get(Uri.parse('$baseUrl/signs/$id'));
+    final response = await http.get(Uri.parse('$baseUrl/$id'));
 
     if (response.statusCode == 200) {
       return SignModel.fromJson(jsonDecode(response.body));

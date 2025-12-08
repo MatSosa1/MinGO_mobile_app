@@ -4,11 +4,11 @@ import 'package:mingo/src/data/models/user_model.dart';
 import 'package:mingo/src/domain/repositories/datasource_repository.dart';
 
 class APIDatasource extends DatasourceRepository {
-  final String baseUrl = 'http://10.0.2.2:3000'; 
+  final String baseUrl = 'http://10.0.2.2:3000/users'; 
 
   @override
   Future<UserModel> createUser(UserModel model) async {
-    final url = Uri.parse('$baseUrl/users/register');
+    final url = Uri.parse('$baseUrl/register');
 
     final response = await http.post(
       url,
@@ -26,7 +26,7 @@ class APIDatasource extends DatasourceRepository {
 
   @override
   Future<UserModel?> getUserByUsername(String email, String password) async {
-    final url = Uri.parse('$baseUrl/users/login');
+    final url = Uri.parse('$baseUrl/login');
 
     final response = await http.post(
       url,
@@ -49,7 +49,7 @@ class APIDatasource extends DatasourceRepository {
 
   @override
   Future<UserModel?> setKnowledgeLevel(String knowledgeLevel, int userId) async {
-    final url = Uri.parse('$baseUrl/users/knowledge');
+    final url = Uri.parse('$baseUrl/knowledge');
 
     final res = await http.patch(
       url,

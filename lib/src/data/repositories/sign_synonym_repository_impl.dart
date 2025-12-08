@@ -23,18 +23,41 @@ class SignSynonymRepositoryImpl implements SignSynonymRepository {
   }
 
   @override
-  Future<List<SignSynonym>> getAllSignSynonyms() async {
-    final models = await dataSource.getAllSignSynonyms();
+  Future<List<SignSynonym>> getSignSynonymsBySignId(int signId) async {
+    final models = await dataSource.getSignSynonymsBySignId(signId);
     return models
         .map((m) => SignSynonym(id: m.id, synonymWord: m.synonymWord, signId: m.signId))
         .toList();
   }
 
   @override
-  Future<List<SignSynonym>> getSignSynonymsBySignId(int signId) async {
+  Future<SignSynonym?> getSignSynonymById(int signId, int synonymId) async {
     final models = await dataSource.getSignSynonymsBySignId(signId);
-    return models
-        .map((m) => SignSynonym(id: m.id, synonymWord: m.synonymWord, signId: m.signId))
-        .toList();
+    try {
+      final model = models.firstWhere((m) => m.id == synonymId);
+      return SignSynonym(id: model.id, synonymWord: model.synonymWord, signId: model.signId);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Future<SignSynonym> updateSignSynonym(SignSynonym synonym) async {
+    final model = SignSynonymModel(
+      id: synonym.id,
+      synonymWord: synonym.synonymWord,
+      signId: synonym.signId,
+    );
+    final updated = await dataSource.updateSignSynonym(model);
+    return SignSynonym(
+      id: updated.id,
+      synonymWord: updated.synonymWord,
+      signId: updated.signId,
+    );
+  }
+
+  @override
+  Future<void> deleteSignSynonym(int signId, int synonymId) async {
+    await dataSource.deleteSignSynonym(signId, synonymId);
   }
 }
