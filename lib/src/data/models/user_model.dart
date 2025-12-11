@@ -12,7 +12,6 @@ class UserModel extends User {
     required super.role,
     super.firstTimeLogin = true,
     this.password,
-    // Puedes agregar isFirstTime al constructor si deseas manejarlo en la entidad también
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -36,7 +35,6 @@ class UserModel extends User {
       'user_knowledge_level': knowledgeLevel,
       'user_first_time_login': firstTimeLogin,
       'role_id': role,
-      'user_first_time_login': true, 
     };
   }
 }
