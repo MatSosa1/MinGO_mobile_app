@@ -45,4 +45,16 @@ class SignDataSourceImpl implements SignDataSource {
       throw Exception('Error fetching sign: ${response.statusCode}');
     }
   }
+
+  @override
+  Future<List<SignModel>> getSignsByKnowledgeLevel(String knowledgeLevel) async {
+    final response = await http.get(Uri.parse('$baseUrl/?section=$knowledgeLevel'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => SignModel.fromJson(json)).toList();
+    } else {
+      throw Exception('Error fetching signs: ${response.statusCode}');
+    }
+  }
 }

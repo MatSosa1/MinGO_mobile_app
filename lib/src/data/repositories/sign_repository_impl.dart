@@ -56,4 +56,19 @@ class SignRepositoryImpl implements SignRepository {
       tagId: model.tagId,
     );
   }
+
+  @override
+  Future<List<Sign>> getSignsByKnowledgeLevel(String knowledgeLevel) async {
+    final models = await dataSource.getSignsByKnowledgeLevel(knowledgeLevel);
+    return models
+      .map((m) => Sign(
+            id: m.id,
+            signTitle: m.signTitle,
+            signVideoUrl: m.signVideoUrl,
+            signImageUrl: m.signImageUrl,
+            signSection: m.signSection,
+            tagId: m.tagId,
+          ))
+      .toList();
+  }
 }
