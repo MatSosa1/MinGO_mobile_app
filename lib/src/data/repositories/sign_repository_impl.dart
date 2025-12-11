@@ -17,7 +17,9 @@ class SignRepositoryImpl implements SignRepository {
       signSection: sign.signSection,
       tagId: sign.tagId,
     );
+
     final created = await dataSource.createSign(model);
+
     return Sign(
       id: created.id,
       signTitle: created.signTitle,

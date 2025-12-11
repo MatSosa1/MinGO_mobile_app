@@ -12,7 +12,7 @@ class SignModel extends Sign {
 
   factory SignModel.fromJson(Map<String, dynamic> json) {
     return SignModel(
-      id: json['id'],
+      id: json['sign_id'],
       signTitle: json['sign_title'],
       signVideoUrl: json['sign_video_url'],
       signImageUrl: json['sign_image_url'],

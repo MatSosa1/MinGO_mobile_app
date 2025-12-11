@@ -4,7 +4,7 @@ import 'package:mingo/src/domain/repositories/sign_datasource_repository.dart';
 import '../models/sign_model.dart';
 
 class SignDataSourceImpl implements SignDataSource {
-  final String baseUrl = 'http://10.0.2.2:3000/signs'; 
+  final String baseUrl = 'http://localhost:3000/signs'; 
 
   @override
   Future<SignModel> createSign(SignModel sign) async {
@@ -13,6 +13,8 @@ class SignDataSourceImpl implements SignDataSource {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(sign.toJson()),
     );
+
+    print(response.body);
 
     if (response.statusCode == 201) {
       return SignModel.fromJson(jsonDecode(response.body));

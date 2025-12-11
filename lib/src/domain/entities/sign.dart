@@ -1,8 +1,12 @@
 enum SignSection {
-  Principiante,
-  Intermedio,
-  Avanzado,
-  FrasesComunes,
+  Principiante('Principiante'),
+  Intermedio('Intermedio'),
+  Avanzado('Avanzado'),
+  FrasesComunes('Frases Comunes');
+
+  final String name;
+
+  const SignSection(this.name);
 }
 
 class Sign {
