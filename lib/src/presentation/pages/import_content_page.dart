@@ -16,19 +16,17 @@ class ImportContentPage extends StatefulWidget {
 
 class _ImportContentPageState extends State<ImportContentPage> {
   final _formKey = GlobalKey<FormState>();
-  
-  // Repositorios
+
   late final SignRepositoryImpl _signRepository;
   late final TagRepositoryImpl _tagRepository;
 
   bool _isLoading = false;
   List<Tag> _tags = [];
-  
-  // Datos del formulario
+
   String? _title;
   String? _description; 
-  String? _videoUrl;    
-  String? _imageUrl;
+  String? _videoUrl;
+  String? _imageUrl; 
   SignSection? _section;
   int? _selectedTagId;
   String? _keywords;
@@ -42,7 +40,6 @@ class _ImportContentPageState extends State<ImportContentPage> {
   }
 
   Future<void> _loadTags() async {
-    // Simulación de carga de tags/categorías
     setState(() => _isLoading = true);
     try {
       final tags = await _tagRepository.getAllTags();
@@ -55,32 +52,53 @@ class _ImportContentPageState extends State<ImportContentPage> {
     }
   }
 
-  void _submit() async {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-      setState(() => _isLoading = true);
+Future<void> _submit() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    _formKey.currentState!.save();
 
-      // Conversión de palabras clave
-      List<String> synonyms = _keywords?.split(',').map((e) => e.trim()).toList() ?? [];
+    setState(() => _isLoading = true);
 
-      final newSign = SignModel(
-        signTitle: _title!,
-        description: _description!,
-        signVideoUrl: _videoUrl ?? "http://video.placeholder", // Valor por defecto si es simulación
-        signImageUrl: _imageUrl,
-        signSection: _section!,
-        tagId: _selectedTagId!,
-        synonyms: synonyms,
+    List<String> synonyms = _keywords
+            ?.split(',')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty) 
+            .toList() ?? [];
+
+    // Crear modelo
+    final newSign = SignModel(
+      signTitle: _title!,
+      description: _description!,
+      signVideoUrl: _videoUrl!,
+      signImageUrl: _imageUrl,
+      signSection: _section!,
+      tagId: _selectedTagId!,
+      synonyms: synonyms,
+    );
+
+    try {
+      await _signRepository.createSign(newSign);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Contenido guardado correctamente"),
+          backgroundColor: Colors.green,
+        ),
       );
+      
+      // Navigator.pop(context);
 
-      try {
-        await _signRepository.createSign(newSign);
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Contenido importado exitosamente")));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Ocurrió un error: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
         setState(() => _isLoading = false);
-      } catch (e) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
       }
     }
   }
@@ -100,24 +118,24 @@ class _ImportContentPageState extends State<ImportContentPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("Archivos Multimedia", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const Text("Enlaces Multimedia", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               const SizedBox(height: 10),
-              
-              // Botones de Carga (UI-08)
-              Row(
-                children: [
-                  Expanded(
-                    child: _uploadButton(Icons.videocam, "Subir Video", () {
-                      // Lógica de carga de video
-                      _videoUrl = "video_cargado.mp4"; 
-                    }),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _uploadButton(Icons.image, "Subir Imagen", () {}),
-                  ),
-                ],
+              _buildField(
+                "URL del Video", 
+                "Ej. https://video-url.com/video.mp4", 
+                (v) => _videoUrl = v,
+                icon: Icons.videocam_outlined
               ),
+              const SizedBox(height: 15),
+
+              _buildField(
+                "URL de la Imagen (Opcional)", 
+                "Ej. https://image-url.com/imagen.png", 
+                (v) => _imageUrl = v,
+                icon: Icons.image_outlined,
+                required: false
+              ),
+
               const SizedBox(height: 20),
               const Divider(),
               const SizedBox(height: 10),
@@ -125,11 +143,9 @@ class _ImportContentPageState extends State<ImportContentPage> {
               const Text("Detalles del Contenido", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               const SizedBox(height: 15),
 
-              // Título
               _buildField("Título del Contenido", "Ej. Saludo", (v) => _title = v),
               const SizedBox(height: 15),
 
-              // Categoría (Tag)
               DropdownButtonFormField<int>(
                 decoration: _inputDecor("Categoría de la Seña"),
                 items: _tags.map((t) => DropdownMenuItem(value: t.id, child: Text(t.tagName))).toList(),
@@ -138,7 +154,6 @@ class _ImportContentPageState extends State<ImportContentPage> {
               ),
               const SizedBox(height: 15),
 
-              // Sección/Nivel
               DropdownButtonFormField<SignSection>(
                 decoration: _inputDecor("Nivel Educativo / Sección"),
                 items: SignSection.values.map((s) => DropdownMenuItem(value: s, child: Text(s.name))).toList(),
@@ -147,7 +162,6 @@ class _ImportContentPageState extends State<ImportContentPage> {
               ),
               const SizedBox(height: 15),
 
-              // Frase Asociada (Condicional según RF004)
               _buildField(
                 _section == SignSection.FrasesComunes ? "Frase Exacta" : "Oración de Ejemplo",
                 "Ingresa el texto asociado...",
@@ -156,10 +170,10 @@ class _ImportContentPageState extends State<ImportContentPage> {
               ),
               const SizedBox(height: 15),
 
-              // Palabras Clave
               _buildField("Palabras Clave (Separadas por coma)", "Ej. Casa, Hogar", (v) => _keywords = v),
 
               const SizedBox(height: 30),
+              
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -171,7 +185,7 @@ class _ImportContentPageState extends State<ImportContentPage> {
                   ),
                   child: _isLoading 
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("Importar Contenido", style: TextStyle(fontWeight: FontWeight.bold)),
+                    : const Text("Importar Contenido", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 ),
               ),
             ],
@@ -181,33 +195,28 @@ class _ImportContentPageState extends State<ImportContentPage> {
     );
   }
 
-  Widget _uploadButton(IconData icon, String label, VoidCallback onTap) {
-    return ElevatedButton.icon(
-      onPressed: onTap,
-      icon: Icon(icon, color: const Color(0xFF0099FF)),
-      label: Text(label, style: const TextStyle(color: Color(0xFF0099FF))),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        padding: const EdgeInsets.symmetric(vertical: 15),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
-  }
-
-  Widget _buildField(String label, String hint, Function(String?) onSaved, {int maxLines = 1}) {
+  Widget _buildField(
+    String label, 
+    String hint, 
+    Function(String?) onSaved, 
+    {int maxLines = 1, IconData? icon, bool required = true}
+  ) {
     return TextFormField(
-      decoration: _inputDecor(label, hint: hint),
+      decoration: _inputDecor(label, hint: hint, icon: icon),
       maxLines: maxLines,
       onSaved: onSaved,
-      validator: (v) => (v?.isEmpty ?? true) ? "Requerido" : null,
+      validator: (v) {
+        if (!required) return null;
+        return (v?.isEmpty ?? true) ? "Requerido" : null;
+      },
     );
   }
 
-  InputDecoration _inputDecor(String label, {String? hint}) {
+  InputDecoration _inputDecor(String label, {String? hint, IconData? icon}) {
     return InputDecoration(
       labelText: label,
       hintText: hint,
+      prefixIcon: icon != null ? Icon(icon, color: Colors.grey) : null,
       filled: true,
       fillColor: const Color(0xFFF5F5F5),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),

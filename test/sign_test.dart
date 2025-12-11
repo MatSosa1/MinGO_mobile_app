@@ -25,6 +25,7 @@ void main() {
       SignModel model = SignModel(
         signTitle: 'Titulotest',
         signVideoUrl: 'video.url',
+        description: 'hola',
         signSection: SignSection.FrasesComunes,
         tagId: 1
       );

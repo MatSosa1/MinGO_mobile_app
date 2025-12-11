@@ -13,8 +13,6 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
-  
-  // Controladores
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
@@ -26,9 +24,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
   final _roles = const ['Padre', 'Docente'];
 
-  // Colores del Diseño (UI-01)
-  final Color _bgColor = const Color(0xFFE6F3FF); // Azul Claro
-  final Color _primaryColor = const Color(0xFF0099FF); // Azul MinGO
+  final Color _bgColor = const Color(0xFFE6F3FF);
+  final Color _primaryColor = const Color(0xFF0099FF); 
 
   @override
   void dispose() {
@@ -42,7 +39,7 @@ class _RegisterPageState extends State<RegisterPage> {
   Future<void> _pickDate() async {
     final now = DateTime.now();
     final first = DateTime(1900);
-    final last = DateTime(now.year - 18, now.month, now.day); // Mayor de edad sugerido
+    final last = DateTime(now.year - 18, now.month, now.day);
 
     final picked = await showDatePicker(
       context: context,
@@ -70,8 +67,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   void _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    
-    // Mapeo de Roles según SRS
+
     final int roleId = (_role == 'Padre') ? 1 : 2;
 
     final newUser = UserModel(
@@ -80,7 +76,7 @@ class _RegisterPageState extends State<RegisterPage> {
       password: _passwordCtrl.text,
       birthDate: _dob!,
       role: roleId,
-      knowledgeLevel: 'Principiante', // Se define luego en el Test (RF003)
+      knowledgeLevel: 'Principiante',
       id: null,
     );
 
@@ -145,8 +141,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black54),
               ),
               const SizedBox(height: 24),
-              
-              // Tarjeta Blanca (UI-01)
+
               Card(
                 elevation: 4,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -157,7 +152,6 @@ class _RegisterPageState extends State<RegisterPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Nombre
                         TextFormField(
                           controller: _nameCtrl,
                           decoration: _inputDecor('Nombre', icon: Icons.person_outline),
@@ -165,7 +159,6 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Correo
                         TextFormField(
                           controller: _emailCtrl,
                           keyboardType: TextInputType.emailAddress,
@@ -174,7 +167,6 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Contraseña
                         TextFormField(
                           controller: _passwordCtrl,
                           obscureText: _obscureText,
@@ -190,7 +182,6 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Fecha Nacimiento
                         GestureDetector(
                           onTap: _pickDate,
                           child: AbsorbPointer(
@@ -205,7 +196,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                         // Rol
                         DropdownButtonFormField<String>(
-                          value: _role,
+                          initialValue: _role,
                           items: _roles.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
                           onChanged: (v) => setState(() => _role = v),
                           decoration: _inputDecor('Rol', icon: Icons.badge_outlined),

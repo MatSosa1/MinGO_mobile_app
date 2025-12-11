@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 
-// NOTA: Este archivo reemplaza visualmente al anterior listado.
-// Asegúrate de que en main.dart la ruta '/home' apunte aquí.
-
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
@@ -22,7 +19,6 @@ class HomePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Bienvenida (UI-14)
             const Text(
               "¡Bienvenido/a!",
               textAlign: TextAlign.center,
@@ -36,9 +32,8 @@ class HomePage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Botón Enlazar (Destacado)
             ElevatedButton(
-              onPressed: () => Navigator.pushNamed(context, '/link_class'), // RF007
+              onPressed: () => Navigator.pushNamed(context, '/link_class'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF0099FF),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
@@ -48,7 +43,6 @@ class HomePage extends StatelessWidget {
             ),
             const SizedBox(height: 25),
 
-            // Tarjeta Clase Actual
             Card(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: Padding(
@@ -57,7 +51,7 @@ class HomePage extends StatelessWidget {
                   children: [
                     const Text("Tu Clase Actual", style: TextStyle(fontWeight: FontWeight.bold)),
                     const Divider(),
-                    _infoRow("Nivel:", "Principiante"), // Dato dinámico en app real
+                    _infoRow("Nivel:", "Principiante"),
                     _infoRow("Categoría:", "Saludos y Despedidas"),
                   ],
                 ),
@@ -65,7 +59,6 @@ class HomePage extends StatelessWidget {
             ),
             const SizedBox(height: 15),
 
-            // Tarjeta Frases Comunes (Acceso a RF005)
             _navCard(
               context,
               icon: Icons.chat_bubble_outline,
@@ -78,7 +71,6 @@ class HomePage extends StatelessWidget {
             ),
             const SizedBox(height: 15),
 
-            // Tarjeta Reportes
             _navCard(
               context,
               icon: Icons.bar_chart,

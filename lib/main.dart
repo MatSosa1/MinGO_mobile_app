@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart'; // IMPORTANTE
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:mingo/src/presentation/pages/categorized_phrases_page.dart';
 import 'package:provider/provider.dart';
-
-// Imports de Capas de Datos y Dominio
 import 'package:mingo/src/data/datasources/sign_datasource.dart';
 import 'package:mingo/src/data/datasources/user_datasource.dart';
 import 'package:mingo/src/data/repositories/sign_repository_impl.dart';
 import 'package:mingo/src/data/repositories/user_repository_impl.dart';
 import 'package:mingo/src/domain/entities/sign.dart';
 import 'package:mingo/src/domain/usecases/auth_usecases.dart';
-
-// Imports de Presentación
 import 'package:mingo/src/presentation/factories/content_page_factory.dart';
 import 'package:mingo/src/presentation/pages/import_content_page.dart';
 import 'package:mingo/src/presentation/pages/knowledge_form_page.dart';
@@ -69,15 +65,14 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'MinGO',
       
-      // --- CONFIGURACIÓN DE LOCALIZACIÓN ---
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('es'), // Español
-        Locale('en'), // Inglés (opcional)
+        Locale('es'), 
+        Locale('en'), 
       ],
       // -------------------------------------
       initialRoute: '/login', 
@@ -101,10 +96,6 @@ class MyApp extends StatelessWidget {
 
         // --- FUNCIONES DE DOCENTE ---
         '/import_content': (_) => const ImportContentPage(),
-        
-        // --- RUTAS PENDIENTES / PLACEHOLDERS ---
-        // Estas rutas son necesarias para que los botones del Dashboard no den error.
-        // Puedes implementar las pantallas reales luego.
       
         '/link_class': (_) => Scaffold(
           appBar: AppBar(title: const Text("Enlazar Clase")),

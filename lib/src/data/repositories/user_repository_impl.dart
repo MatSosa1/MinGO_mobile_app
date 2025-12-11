@@ -15,7 +15,6 @@ class UserRepositoryImpl extends UserRepository {
       final userModel = await datasource.getUserByEmail(email, password);
       return userModel;
     } catch (e) {
-      print('Error en loginUser: $e'); 
       return null;
     }
   }
@@ -30,7 +29,6 @@ class UserRepositoryImpl extends UserRepository {
       final createdUser = await datasource.createUser(user);
       return createdUser;
     } catch (e) {
-      print('Error en registerUser: $e');
       rethrow;
     }
   }
@@ -51,7 +49,6 @@ class UserRepositoryImpl extends UserRepository {
 
       return model;
     } catch (e) {
-      print('Error: $e');
       return null;
     }
   }

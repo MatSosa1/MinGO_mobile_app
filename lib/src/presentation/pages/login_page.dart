@@ -29,22 +29,16 @@ class _LoginPageState extends State<LoginPage> {
 
     if (success) {
       final user = authProvider.currentUser;
-      
-      // Lógica de Redirección (RF002)
       if (user?.role == 2) {
-         // Docente -> Importar Contenido (o Dashboard Docente)
-         Navigator.pushReplacementNamed(context, '/import_content');
-      } else {
-         // Padre -> Test si es Principiante (asumiendo primera vez) o Home
-         // Nota: En un caso real usaríamos un flag 'isFirstTime' del backend [cite: 2355]
-         bool isFirstLogin = user?.knowledgeLevel == 'Principiante'; 
+          Navigator.pushReplacementNamed(context, '/import_content');
+        } else {
+        bool isFirstLogin = user?.knowledgeLevel == 'Principiante'; 
 
-         if (isFirstLogin) {
+        if (isFirstLogin) {
             Navigator.pushReplacementNamed(context, '/knowledge_form');
-         } else {
-            // RF007/RF015: Home del Padre (Dashboard)
+        } else {
             Navigator.pushReplacementNamed(context, '/home'); 
-         }
+        }
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -72,7 +66,6 @@ class _LoginPageState extends State<LoginPage> {
               const Text('Iniciar Sesión', style: TextStyle(fontSize: 18, color: Colors.black54)),
               const SizedBox(height: 30),
 
-              // Avatar (UI-02)
               const CircleAvatar(
                 radius: 40,
                 backgroundColor: Colors.white,
