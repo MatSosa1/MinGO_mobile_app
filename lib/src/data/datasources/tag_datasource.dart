@@ -4,7 +4,7 @@ import '../../domain/repositories/tag_datasource_repository.dart';
 import '../models/tag_model.dart';
 
 class TagDataSourceImpl implements TagDataSource {
-  final String baseUrl = 'http://10.0.2.2:3000/tags'; 
+  final String baseUrl = 'http://localhost:3000/tags'; 
 
   @override
   Future<TagModel> createTag(TagModel tag) async {

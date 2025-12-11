@@ -4,7 +4,7 @@ import 'package:mingo/src/data/models/user_model.dart';
 import 'package:mingo/src/domain/repositories/user_datasource_repository.dart';
 
 class UserDatasourceImpl extends UserDatasource {
-  final String baseUrl = 'http://10.0.2.2:3000/users'; 
+  final String baseUrl = 'http://localhost:3000/users'; 
 
   @override
   Future<UserModel> createUser(UserModel model) async {

@@ -4,7 +4,7 @@ import 'package:mingo/src/domain/repositories/sign_datasource_repository.dart';
 import '../models/sign_model.dart';
 
 class SignDataSourceImpl implements SignDataSource {
-  final String baseUrl = 'http://10.0.2.2:3000/signs'; 
+  final String baseUrl = 'http://localhost:3000/signs'; 
 
   @override
   Future<SignModel> createSign(SignModel sign) async {
@@ -14,12 +14,10 @@ class SignDataSourceImpl implements SignDataSource {
       body: jsonEncode(sign.toJson()),
     );
 
-    print(response.body);
-
     if (response.statusCode == 201) {
       return SignModel.fromJson(jsonDecode(response.body));
     } else {
-      throw Exception('Error creating sign: ${response.statusCode}');
+      throw Exception('Error creating sign: ${response.statusCode} - ${response.body}');
     }
   }
 
@@ -50,13 +48,14 @@ class SignDataSourceImpl implements SignDataSource {
 
   @override
   Future<List<SignModel>> getSignsByKnowledgeLevel(String knowledgeLevel) async {
-    final response = await http.get(Uri.parse('$baseUrl/?section=$knowledgeLevel'));
+    final uri = Uri.parse('$baseUrl/?section=$knowledgeLevel');
+    final response = await http.get(uri);
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((json) => SignModel.fromJson(json)).toList();
     } else {
-      throw Exception('Error fetching signs: ${response.statusCode}');
+      throw Exception('Error fetching signs by level: ${response.statusCode}');
     }
   }
 }

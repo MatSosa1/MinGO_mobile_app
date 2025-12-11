@@ -12,65 +12,48 @@ class SignRepositoryImpl implements SignRepository {
   Future<Sign> createSign(Sign sign) async {
     final model = SignModel(
       signTitle: sign.signTitle,
+      description: sign.description, 
       signVideoUrl: sign.signVideoUrl,
       signImageUrl: sign.signImageUrl,
       signSection: sign.signSection,
       tagId: sign.tagId,
+      synonyms: sign.synonyms, 
     );
 
     final created = await dataSource.createSign(model);
 
-    return Sign(
-      id: created.id,
-      signTitle: created.signTitle,
-      signVideoUrl: created.signVideoUrl,
-      signImageUrl: created.signImageUrl,
-      signSection: created.signSection,
-      tagId: created.tagId,
-    );
+    return _mapModelToEntity(created);
   }
 
   @override
   Future<List<Sign>> getAllSigns() async {
     final models = await dataSource.getAllSigns();
-    return models
-        .map((m) => Sign(
-              id: m.id,
-              signTitle: m.signTitle,
-              signVideoUrl: m.signVideoUrl,
-              signImageUrl: m.signImageUrl,
-              signSection: m.signSection,
-              tagId: m.tagId,
-            ))
-        .toList();
+    return models.map((m) => _mapModelToEntity(m)).toList();
   }
 
   @override
   Future<Sign?> getSignById(int id) async {
     final model = await dataSource.getSignById(id);
     if (model == null) return null;
-    return Sign(
-      id: model.id,
-      signTitle: model.signTitle,
-      signVideoUrl: model.signVideoUrl,
-      signImageUrl: model.signImageUrl,
-      signSection: model.signSection,
-      tagId: model.tagId,
-    );
+    return _mapModelToEntity(model);
   }
 
   @override
   Future<List<Sign>> getSignsByKnowledgeLevel(String knowledgeLevel) async {
     final models = await dataSource.getSignsByKnowledgeLevel(knowledgeLevel);
-    return models
-      .map((m) => Sign(
-            id: m.id,
-            signTitle: m.signTitle,
-            signVideoUrl: m.signVideoUrl,
-            signImageUrl: m.signImageUrl,
-            signSection: m.signSection,
-            tagId: m.tagId,
-          ))
-      .toList();
+    return models.map((m) => _mapModelToEntity(m)).toList();
+  }
+
+  Sign _mapModelToEntity(SignModel m) {
+    return Sign(
+      id: m.id,
+      signTitle: m.signTitle,
+      description: m.description, 
+      signVideoUrl: m.signVideoUrl,
+      signImageUrl: m.signImageUrl,
+      signSection: m.signSection,
+      tagId: m.tagId,
+      synonyms: m.synonyms,
+    );
   }
 }
