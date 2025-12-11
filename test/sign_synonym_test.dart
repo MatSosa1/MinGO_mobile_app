@@ -12,11 +12,18 @@ void main() {
     });
 
     test('creatSignSynonym', () async {
-      SignSynonymModel model = SignSynonymModel(synonymWord: 'Carro', signId: 1);
+      SignSynonymModel model = SignSynonymModel(synonymWord: 'Auto', signId: 2);
 
       final result = await dataSource.createSignSynonym(model);
 
       expect(result.id, model.id);
+    });
+
+    test('getSignSynonymsBySignId', () async {
+      final result = await dataSource.getSignSynonymsBySignId(2);
+
+      expect(result, isA<List>());
+      expect(result[0].signId, 2);
     });
   });
 }

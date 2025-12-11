@@ -4,7 +4,7 @@ import '../../domain/repositories/sign_synonym_datasource_repository.dart';
 import '../models/sign_synonym_model.dart';
 
 class SignSynonymDataSourceImpl implements SignSynonymDataSource {
-  final String baseUrl = 'http://localhost:3000/signs';
+  final String baseUrl = 'http://10.0.2.2:3000/signs';
 
   @override
   Future<SignSynonymModel> createSignSynonym(SignSynonymModel synonym) async {
