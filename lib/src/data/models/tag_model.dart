@@ -8,14 +8,14 @@ class TagModel extends Tag {
 
   factory TagModel.fromJson(Map<String, dynamic> json) {
     return TagModel(
-      id: json['id'],
+      id: json['tag_id'],
       tagName: json['tag_name'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      'tag_id': id,
       'tag_name': tagName,
     };
   }
