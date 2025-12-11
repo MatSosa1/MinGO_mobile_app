@@ -65,12 +65,16 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
+    final int roleId = (_role == 'Padre') ? 1 : 2;
+
     final newUser = UserModel(
       name: _nameCtrl.text.trim(),
       email: _emailCtrl.text.trim(),
       password: _passwordCtrl.text,
       birthDate: _dob!,
-      role: _role!,
+      role: roleId,
+      knowledgeLevel: 'Principiante', 
+      id: null, 
     );
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -144,7 +148,6 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         const SizedBox(height: 24),
 
-                        // Campo Nombre
                         TextFormField(
                           controller: _nameCtrl,
                           textInputAction: TextInputAction.next,
@@ -191,7 +194,6 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Campo Rol [RF1]
                         DropdownButtonFormField<String>(
                           initialValue: _role,
                           items: _roles.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
@@ -212,6 +214,21 @@ class _RegisterPageState extends State<RegisterPage> {
                             child: isLoading
                                 ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                                 : const Text('Registrarse'),
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text(
+                            '¿Ya tienes cuenta? Inicia Sesión',
+                            style: TextStyle(
+                              color: Color(0xFF0A4D8C),
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],

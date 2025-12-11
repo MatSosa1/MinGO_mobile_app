@@ -1,266 +1,204 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:mingo/src/presentation/providers/auth_provider.dart';
 
 class KnowledgeFormPage extends StatefulWidget {
   const KnowledgeFormPage({super.key});
 
   @override
-  State<StatefulWidget> createState() => _KnowledgeFormPageState();
+  State<KnowledgeFormPage> createState() => _KnowledgeFormPageState();
 }
 
 class _KnowledgeFormPageState extends State<KnowledgeFormPage> {
   final _formKey = GlobalKey<FormState>();
 
-  String? q1;
-  int? q2;
-  String? q3;
-  String? q4;
-  String? q5;
-  String? q6;
-  String? q7;
-  String? q8;
-  String? q9;
-  String? q10;
+  // Variables de estado para las 10 preguntas
+  String? q1; // Conocimiento general
+  String? q2; // Alfabeto
+  String? q3; // Frecuencia de uso
+  String? q4; // Cultura sorda
+  String? q5; // Recursos visuales
+  String? q6; // Vocabulario básico
+  String? q7; // Interacción
+  String? q8; // Dificultades (Inverso)
+  String? q9; // Experiencia previa
+  String? q10; // Accesibilidad
 
-  final Map<int, Map<String, int>> scoreTable = {
-    1: { "Sí": 5, "Algo": 3, "No": 0 },
-    3: { "Frecuentemente": 5, "A veces": 3, "Nunca": 0 },
-    4: { "Sí": 5, "He escuchado pero no la uso": 3, "No": 0 },
-    5: { "Sí": 5, "Solo videos": 3, "Solo libros": 3, "No": 0 },
-    6: { "Sí": 5, "Lo intento pero no sé cómo": 3, "No": 0 },
-    7: { "Sí, varios": 5, "Solo una persona": 3, "No lo sé": 1, "Nadie": 0 },
-    8: { "No": 5, "A veces": 3, "Sí": 0, "No lo he intentado": 1 },
-    9: { "Sí": 5, "De manera informal": 3, "No": 0 },
-    10: { "Sí": 5, "Parcial (solo cámara o solo audio)": 3, "No": 0 },
-  };
+  int _getScore(String? answer, Map<String, int> values) {
+    if (answer == null) return 0;
+    return values[answer] ?? 0;
+  }
+
+  int _calculateTotalScore() {
+    int score = 0;
+    // P1: ¿Conoce algo de lengua de señas?
+    score += _getScore(q1, {"Sí": 5, "Algo": 3, "No": 0});
+    // P2: ¿Conoce el alfabeto dactilológico?
+    score += _getScore(q2, {"Sí, completo": 5, "Algunas letras": 3, "No": 0});
+    // P3: ¿Con qué frecuencia practica o ve señas?
+    score += _getScore(q3, {"Frecuentemente": 5, "A veces": 3, "Nunca": 0});
+    // P4: ¿Ha escuchado sobre la cultura sorda?
+    score += _getScore(q4, {"Sí": 5, "He escuchado": 3, "No": 0});
+    // P5: ¿Usa videos o libros para aprender?
+    score += _getScore(q5, {"Sí": 5, "Solo uno": 3, "No": 0});
+    // P6: ¿Reconoce saludos básicos?
+    score += _getScore(q6, {"Sí, todos": 5, "Algunos": 3, "No": 0});
+    // P7: ¿Ha interactuado con personas sordas?
+    score += _getScore(q7, {"Sí, varios": 5, "Solo una": 3, "Nadie": 0});
+    // P8: ¿Tiene dificultades para comprender gestos? (Inverso: No tener dificultades da más puntos)
+    score += _getScore(q8, {"No": 5, "A veces": 3, "Sí": 0}); 
+    // P9: ¿Ha participado en cursos previos?
+    score += _getScore(q9, {"Sí": 5, "Informal": 3, "No": 0});
+    // P10: ¿Tiene acceso a cámara/audio?
+    score += _getScore(q10, {"Sí": 5, "Parcial": 3, "No": 0});
+    
+    return score;
+  }
+
+  void _submitResults() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      _formKey.currentState!.save();
+
+      if ([q1, q2, q3, q4, q5, q6, q7, q8, q9, q10].contains(null)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Por favor responda todas las preguntas")),
+        );
+        return;
+      }
+
+      final score = _calculateTotalScore();
+      String assignedLevel = 'Principiante';
+
+      if (score >= 31) {
+        assignedLevel = 'Avanzado';
+      } else if (score >= 16) {
+        assignedLevel = 'Intermedio';
+      }
+
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+      final success = await authProvider.updateKnowledgeLevel(assignedLevel);
+
+      if (!mounted) return;
+
+      if (success) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: const Text("¡Evaluación Completada!"),
+            content: Text("Tu puntaje fue: $score\nTu nivel asignado es: $assignedLevel"),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  Navigator.pushReplacementNamed(context, '/categorized_phrases');
+                },
+                child: const Text("Continuar"),
+              )
+            ],
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Error al guardar el nivel. Intente nuevamente.")),
+        );
+      }
+    }
+  }
+
+  Widget _buildQuestion(String title, List<String> options, String? groupValue, Function(String?) onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0A4D8C))),
+        const SizedBox(height: 8),
+        ...options.map((option) => RadioListTile<String>(
+          title: Text(option),
+          value: option,
+          groupValue: groupValue,
+          contentPadding: EdgeInsets.zero,
+          activeColor: const Color(0xFF0099FF),
+          onChanged: onChanged,
+        )),
+        const Divider(height: 30),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final isLoading = context.watch<AuthProvider>().isLoading;
+
     return Scaffold(
-      appBar: AppBar(title: Text("Formulario de Conocimiento")),
+      appBar: AppBar(
+        title: const Text("Prueba de Conocimiento"),
+        backgroundColor: const Color(0xFF0A4D8C),
+        foregroundColor: Colors.white,
+      ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(24),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
-              /// 1. Conocimiento básico de señas
-              _buildRadioGroup(
-                label: "1. ¿Conoce alguna seña básica de saludo?",
-                value: q1,
-                items: ["Sí", "No", "Algo"],
-                onChanged: (v) => setState(() => q1 = v),
+              const Text(
+                "Responde las siguientes preguntas para personalizar tu experiencia en MinGO.",
+                style: TextStyle(fontSize: 16, color: Colors.black87),
               ),
+              const SizedBox(height: 24),
 
-              /// 2. Edad del hijo/hija
-              Text("2. ¿Qué edad tiene su hijo o hija con discapacidad auditiva?",
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              TextFormField(
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(hintText: "Ingrese edad (1 a 12 años)"),
-                validator: (value) {
-                  if (value == null || value.isEmpty) return "Ingrese una edad";
-                  final n = int.tryParse(value);
-                  if (n == null || n < 1 || n > 12) {
-                    return "Edad debe estar entre 1 y 12";
-                  }
-                  return null;
-                },
-                onChanged: (v) => q2 = int.tryParse(v),
-              ),
-              SizedBox(height: 20),
+              // Pregunta 1
+              _buildQuestion("1. ¿Conoce algo de lengua de señas?", ["Sí", "Algo", "No"], q1, (v) => setState(() => q1 = v)),
 
-              /// 3. Estrategias de comunicación
-              _buildRadioGroup(
-                label: "3. ¿Ha usado imágenes o gestos para comunicarse con su hijo(a)?",
-                value: q3,
-                items: ["Frecuentemente", "A veces", "Nunca"],
-                onChanged: (v) => setState(() => q3 = v),
-              ),
+              // Pregunta 2
+              _buildQuestion("2. ¿Conoce el alfabeto dactilológico?", ["Sí, completo", "Algunas letras", "No"], q2, (v) => setState(() => q2 = v)),
 
-              /// 4. Lenguaje inclusivo
-              _buildRadioGroup(
-                label: "4. ¿Conoce qué es la lengua de señas ecuatoriana (LSEC)?",
-                value: q4,
-                items: ["Sí", "No", "He escuchado pero no la uso"],
-                onChanged: (v) => setState(() => q4 = v),
-              ),
+              // Pregunta 3
+              _buildQuestion("3. ¿Con qué frecuencia practica?", ["Frecuentemente", "A veces", "Nunca"], q3, (v) => setState(() => q3 = v)),
 
-              /// 5. Práctica previa
-              _buildRadioGroup(
-                label: "5. ¿Ha intentado enseñar alguna seña a su hijo(a) anteriormente?",
-                value: q5,
-                items: ["Sí", "No", "Lo intento pero no sé cómo"],
-                onChanged: (v) => setState(() => q5 = v),
-              ),
+              // Pregunta 4
+              _buildQuestion("4. ¿Ha escuchado sobre la cultura sorda?", ["Sí", "He escuchado", "No"], q4, (v) => setState(() => q4 = v)),
 
-              /// 6. Recursos utilizados
-              _buildRadioGroup(
-                label: "6. ¿Ha consultado libros, videos, o tutoriales sobre señas?",
-                value: q6,
-                items: ["Sí", "No", "Solo videos", "Solo libros"],
-                onChanged: (v) => setState(() => q6 = v),
-              ),
+              // Pregunta 5
+              _buildQuestion("5. ¿Usa recursos visuales (videos/libros)?", ["Sí", "Solo uno", "No"], q5, (v) => setState(() => q5 = v)),
 
-              /// 7. Recursos en el entorno
-              _buildRadioGroup(
-                label: "7. ¿Alguien más en su entorno conoce acerca de la lengua de señas?",
-                value: q7,
-                items: ["Sí, varios", "Solo una persona", "Nadie", "No lo sé"],
-                onChanged: (v) => setState(() => q7 = v),
-              ),
+              // Pregunta 6
+              _buildQuestion("6. ¿Reconoce saludos básicos en LSEC?", ["Sí, todos", "Algunos", "No"], q6, (v) => setState(() => q6 = v)),
 
-              /// 8. Dificultades actuales
-              _buildRadioGroup(
-                label: "8. ¿Considera que tiene dificultades para comprender gestos?",
-                value: q8,
-                items: ["Sí", "No", "A veces", "No lo he intentado"],
-                onChanged: (v) => setState(() => q8 = v),
-              ),
+              // Pregunta 7
+              _buildQuestion("7. ¿Ha interactuado con personas sordas?", ["Sí, varios", "Solo una", "Nadie"], q7, (v) => setState(() => q7 = v)),
 
-              /// 9. Experiencia educativa previa
-              _buildRadioGroup(
-                label: "9. ¿Ha participado antes en cursos o talleres sobre LSEC?",
-                value: q9,
-                items: ["Sí", "No", "De manera informal"],
-                onChanged: (v) => setState(() => q9 = v),
-              ),
+              // Pregunta 8
+              _buildQuestion("8. ¿Tiene dificultades para comprender gestos?", ["No", "A veces", "Sí"], q8, (v) => setState(() => q8 = v)),
 
-              /// 10. Accesibilidad tecnológica
-              _buildRadioGroup(
-                label: "10. ¿Tiene acceso a un dispositivo con cámara y audio funcional?",
-                value: q10,
-                items: ["Sí", "No", "Parcial (solo cámara o solo audio)"],
-                onChanged: (v) => setState(() => q10 = v),
-              ),
+              // Pregunta 9
+              _buildQuestion("9. ¿Experiencia educativa previa en señas?", ["Sí", "Informal", "No"], q9, (v) => setState(() => q9 = v)),
 
-              SizedBox(height: 30),
+              // Pregunta 10
+              _buildQuestion("10. ¿Accesibilidad tecnológica (Cámara/Audio)?", ["Sí", "Parcial", "No"], q10, (v) => setState(() => q10 = v)),
 
-              Center(
+              const SizedBox(height: 16),
+
+              SizedBox(
+                width: double.infinity,
+                height: 50,
                 child: ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      if (!_allQuestionsAnswered()) {
-                        _showError(context);
-                        return;
-                      }
-
-                      _showResults(context);
-                    }
-                  },
-                  child: Text("Enviar"),
+                  onPressed: isLoading ? null : _submitResults,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0099FF),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: isLoading 
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text("Calcular Nivel y Continuar", style: TextStyle(fontSize: 18, color: Colors.white)),
                 ),
-              )
+              ),
             ],
           ),
         ),
       ),
     );
   }
-
-  Widget _buildRadioGroup({
-  required String label,
-  required String? value,
-  required List<String> items,
-  required Function(String?) onChanged,
-}) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 20),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        const SizedBox(height: 8),
-
-        Column(
-          children: items.map((item) {
-            return RadioListTile<String>(
-              title: Text(item),
-              value: item,
-              groupValue: value,
-              onChanged: onChanged,
-              visualDensity: VisualDensity.compact,
-              contentPadding: EdgeInsets.zero,
-            );
-          }).toList(),
-        ),
-      ],
-    ),
-  );
 }
-
-  /// Mostrar resultados
-  void _showResults(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text("Respuestas registradas"),
-        content: SingleChildScrollView(
-          child: Text(_getTotalScore().toString()),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text("Cerrar"))
-        ],
-      ),
-    );
-  }
-
-  int _getTotalScore() {
-    int total = 0;
-
-    void addScore(int pregunta, String? respuesta) {
-      if (respuesta != null && scoreTable[pregunta]!.containsKey(respuesta)) {
-        int score = scoreTable[pregunta]![respuesta]!;
-
-        print('${scoreTable[pregunta]!}: $score');
-
-        total += score;
-      }
-    }
-
-    addScore(1, q1);
-    addScore(3, q3);
-    addScore(4, q4);
-    addScore(5, q5);
-    addScore(6, q6);
-    addScore(7, q7);
-    addScore(8, q8);
-    addScore(9, q9);
-    addScore(10, q10);
-
-    return total;
-  }
-
-  bool _allQuestionsAnswered() {
-    return  q1 != null &&
-            q2 != null &&
-            q3 != null &&
-            q4 != null &&
-            q5 != null &&
-            q6 != null &&
-            q7 != null &&
-            q8 != null &&
-            q9 != null &&
-            q10 != null;
-  }
-}
-
-  void _showError(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text("Campos incompletos"),
-        content: Text("Por favor responda todas las preguntas antes de continuar."),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Aceptar"),
-          ),
-        ],
-      ),
-    );
-  }

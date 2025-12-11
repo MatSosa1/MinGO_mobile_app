@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'; // IMPORTANTE
 import 'package:provider/provider.dart';
+
+// Imports de Capas de Datos y Dominio
+import 'package:mingo/src/data/datasources/sign_datasource.dart';
+import 'package:mingo/src/data/datasources/user_datasource.dart';
+import 'package:mingo/src/data/repositories/sign_repository_impl.dart';
+import 'package:mingo/src/data/repositories/user_repository_impl.dart';
+import 'package:mingo/src/domain/entities/sign.dart';
+import 'package:mingo/src/domain/usecases/auth_usecases.dart';
+
+// Imports de Presentación
+import 'package:mingo/src/presentation/factories/content_page_factory.dart';
+import 'package:mingo/src/presentation/pages/import_content_page.dart';
+import 'package:mingo/src/presentation/pages/knowledge_form_page.dart';
 import 'package:mingo/src/presentation/pages/login_page.dart';
 import 'package:mingo/src/presentation/pages/register_page.dart';
-import 'package:mingo/src/presentation/pages/knowledge_form_page.dart';
-import 'package:mingo/src/presentation/pages/categorized_phrases_page.dart';
-import 'package:mingo/src/presentation/pages/import_content_page.dart';
 import 'package:mingo/src/presentation/providers/auth_provider.dart';
-import 'package:mingo/src/domain/usecases/auth_usecases.dart';
-import 'package:mingo/src/domain/usecases/user_usecases.dart';
-import 'package:mingo/src/data/datasources/user_datasource.dart';
-import 'package:mingo/src/data/repositories/user_repository_impl.dart';
 
 void main() {
   runApp(const AppState());
@@ -20,13 +27,20 @@ class AppState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final apiDatasource = APIDatasource();
-    final userRepository = UserRepositoryImpl(datasource: apiDatasource);
+    // 1. Inicialización de Datasources
+    final userDatasource = UserDatasourceImpl();
+    final signDatasource = SignDataSourceImpl();
 
-    // Casos de uso
+    // 2. Inicialización de Repositorios
+    final userRepository = UserRepositoryImpl(datasource: userDatasource);
+    final signRepository = SignRepositoryImpl(dataSource: signDatasource);
+
+    // 3. Inicialización de Casos de Uso
     final loginUseCase = LoginUserUseCase(userRepository);
     final registerUseCase = RegisterUserUseCase(userRepository);
-    final knowledgeUseCase = SetKnowledgeUseCase(userRepository);
+
+    // 4. Inicialización de Factories (Patrón Factory)
+    final contentFactory = ContentPageFactory(signRepository);
 
     return MultiProvider(
       providers: [
@@ -36,28 +50,52 @@ class AppState extends StatelessWidget {
             registerUseCase: registerUseCase,
           ),
         ),
-        // Puedes agregar más providers aquí si luego conectas frases o multimedia
+        Provider<ContentPageFactory>.value(value: contentFactory),
       ],
-      child: const MyApp(),
+      child: MyApp(contentFactory: contentFactory),
     );
   }
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final ContentPageFactory contentFactory;
+
+  const MyApp({super.key, required this.contentFactory});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'MinGO',
-      initialRoute: '/knowledge_form',
+      
+      // --- CONFIGURACIÓN DE LOCALIZACIÓN ---
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('es'), // Español
+        Locale('en'), // Inglés (opcional)
+      ],
+      // -------------------------------------
+
+      initialRoute: '/login', 
       routes: {
         '/login': (_) => const LoginPage(),
         '/register': (_) => const RegisterPage(),
         '/knowledge_form': (_) => const KnowledgeFormPage(),
-        '/categorized_phrases': (_) => const CategorizedPhrasesPage(),
+        
+        // RF005: Ruta generada por Factory para "Frases Comunes"
+        '/categorized_phrases': (_) => contentFactory.createPage(SignSection.FrasesComunes),
+        
+        // RF004: Ruta para importar contenido
         '/import_content': (_) => const ImportContentPage(),
+
+        // Futuros RF008 (Aprendizaje por Niveles) usando el mismo Factory
+        '/level_beginner': (_) => contentFactory.createPage(SignSection.Principiante),
+        '/level_intermediate': (_) => contentFactory.createPage(SignSection.Intermedio),
+        '/level_advanced': (_) => contentFactory.createPage(SignSection.Avanzado),
       },
     );
   }
