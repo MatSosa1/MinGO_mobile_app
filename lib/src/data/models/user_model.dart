@@ -9,27 +9,30 @@ class UserModel extends User {
     required super.email,
     required this.password,
     required super.birthDate,
+    super.knowledgeLevel = 'Principiante',
     required super.role,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      email: json['email'] as String,
+      id: json['user_id'] as int,
+      name: json['user_name'] as String,
+      email: json['user_email'] as String,
       password: '', 
-      birthDate: DateTime.parse(json['birth_date'] as String),
-      role: json['role'] as String,
+      birthDate: DateTime.parse(json['user_birth_date'] as String),
+      knowledgeLevel: json['user_knowledge_level'] as String,
+      role: json['role_id'] as int,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'name': name,
-      'email': email,
-      'password': password,
-      'birth_date': birthDate.toIso8601String(),
-      'role': role,
+      'user_name': name,
+      'user_email': email,
+      'user_password': password,
+      'user_birth_date': birthDate.toIso8601String(),
+      'user_knowledge_level': knowledgeLevel,
+      'role_id': role,
     };
   }
 }

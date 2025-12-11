@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:mingo/src/data/models/user_model.dart';
-import 'package:mingo/src/domain/repositories/datasource_repository.dart';
+import 'package:mingo/src/domain/repositories/user_datasource_repository.dart';
 
-class APIDatasource extends DatasourceRepository {
-  final String baseUrl = 'http://10.0.2.2:3000/users'; 
+class UserDatasourceImpl extends UserDatasource {
+  final String baseUrl = 'http://localhost:3000/users'; 
 
   @override
   Future<UserModel> createUser(UserModel model) async {
@@ -25,7 +25,7 @@ class APIDatasource extends DatasourceRepository {
   }
 
   @override
-  Future<UserModel?> getUserByUsername(String email, String password) async {
+  Future<UserModel?> getUserByEmail(String email, String password) async {
     final url = Uri.parse('$baseUrl/login');
 
     final response = await http.post(
@@ -53,9 +53,12 @@ class APIDatasource extends DatasourceRepository {
 
     final res = await http.patch(
       url,
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: jsonEncode({
-        'userId': userId,
-        'knowledgeLevel': knowledgeLevel,
+        'user_id': userId,
+        'knowledge_level': knowledgeLevel,
       })
     );
 
@@ -68,6 +71,4 @@ class APIDatasource extends DatasourceRepository {
       throw Exception('Error al asignar Nivel de Conocimiento: ${res.body}');
     }
   }
-
-
 }

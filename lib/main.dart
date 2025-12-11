@@ -19,7 +19,7 @@ class AppState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final apiDatasource = APIDatasource();
+    final apiDatasource = UserDatasourceImpl();
     final userRepository = UserRepositoryImpl(datasource: apiDatasource);
     final loginUseCase = LoginUserUseCase(userRepository);
     final registerUseCase = RegisterUserUseCase(userRepository);

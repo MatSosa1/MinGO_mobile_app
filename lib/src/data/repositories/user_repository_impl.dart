@@ -1,18 +1,18 @@
-import 'package:mingo/src/domain/repositories/datasource_repository.dart';
+import 'package:mingo/src/domain/repositories/user_datasource_repository.dart';
 
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../models/user_model.dart';
 
 class UserRepositoryImpl extends UserRepository {
-  final DatasourceRepository datasource;
+  final UserDatasource datasource;
 
   UserRepositoryImpl({required this.datasource});
 
   @override
   Future<User?> loginUser(String email, String password) async {
     try {
-      final userModel = await datasource.getUserByUsername(email, password);
+      final userModel = await datasource.getUserByEmail(email, password);
       return userModel;
     } catch (e) {
       print('Error en loginUser: $e'); 

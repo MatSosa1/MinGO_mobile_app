@@ -3,13 +3,15 @@ class User {
   final String name;
   final String email; 
   final DateTime birthDate;
-  final String role;
+  final String knowledgeLevel;
+  final int role;
 
   const User({
     this.id,
     required this.name,
     required this.email,
     required this.birthDate,
+    required this.knowledgeLevel,
     required this.role,
   });
 }
