@@ -13,78 +13,44 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  bool _obscureText = true;
 
-  @override
-  void dispose() {
-    _emailCtrl.dispose();
-    _passwordCtrl.dispose();
-    super.dispose();
-  }
+  // Colores
+  final Color _bgColor = const Color(0xFFE6F3FF);
+  final Color _primaryColor = const Color(0xFF0099FF);
 
   void _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
-    // RF002: Validación de credenciales
-    final success = await authProvider.login(
-      _emailCtrl.text.trim(),
-      _passwordCtrl.text,
-    );
+    final success = await authProvider.login(_emailCtrl.text.trim(), _passwordCtrl.text);
 
     if (!mounted) return;
 
     if (success) {
       final user = authProvider.currentUser;
       
-      // --- LÓGICA DE REDIRECCIÓN CORREGIDA ---
-      
-      // CASO 1: DOCENTE (Rol ID 2)
-      // El docente NO realiza prueba de conocimiento y va directo a importar contenido.
+      // Lógica de Redirección (RF002)
       if (user?.role == 2) {
+         // Docente -> Importar Contenido (o Dashboard Docente)
          Navigator.pushReplacementNamed(context, '/import_content');
-      } 
-      
-      // CASO 2: PADRE/ESTUDIANTE (Rol ID 1)
-      else {
-         // Si es nivel 'Principiante', asumimos que es primera vez y debe hacer el test.
-         // (O si tuvieras un flag hasTakenTest en la BD, lo usarías aquí).
-         bool isFirstLogin = user?.knowledgeLevel == 'Principiante';
+      } else {
+         // Padre -> Test si es Principiante (asumiendo primera vez) o Home
+         // Nota: En un caso real usaríamos un flag 'isFirstTime' del backend [cite: 2355]
+         bool isFirstLogin = user?.knowledgeLevel == 'Principiante'; 
 
          if (isFirstLogin) {
-            // RF003: Redirigir a Prueba de Conocimiento
             Navigator.pushReplacementNamed(context, '/knowledge_form');
          } else {
-            // RF007/RF005: Redirigir al Home (Frases Comunes o última vista)
-            Navigator.pushReplacementNamed(context, '/categorized_phrases'); 
+            // RF007/RF015: Home del Padre (Dashboard)
+            Navigator.pushReplacementNamed(context, '/home'); 
          }
       }
-      
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.errorMessage ?? 'Credenciales incorrectas'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(authProvider.errorMessage ?? 'Credenciales incorrectas'), backgroundColor: Colors.red),
       );
     }
-  }
-
-  // ... (Resto del diseño visual idéntico al anterior)
-  InputDecoration _decor(String label, {String? hint, Widget? suffixIcon}) {
-    return InputDecoration(
-      labelText: label,
-      hintText: hint,
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-      ),
-      suffixIcon: suffixIcon,
-    );
   }
 
   @override
@@ -92,97 +58,79 @@ class _LoginPageState extends State<LoginPage> {
     final isLoading = context.watch<AuthProvider>().isLoading;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFE6F3FF),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+      backgroundColor: _bgColor,
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              const Text(
+                'MinGO',
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF0A4D8C)),
+              ),
+              const SizedBox(height: 8),
+              const Text('Iniciar Sesión', style: TextStyle(fontSize: 18, color: Colors.black54)),
+              const SizedBox(height: 30),
+
+              // Avatar (UI-02)
+              const CircleAvatar(
+                radius: 40,
+                backgroundColor: Colors.white,
+                child: Icon(Icons.person, size: 50, color: Color(0xFF0099FF)),
+              ),
+              const SizedBox(height: 24),
+
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 child: Padding(
                   padding: const EdgeInsets.all(24),
                   child: Form(
                     key: _formKey,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Text(
-                          'MinGO',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 28, 
-                            fontWeight: FontWeight.bold, 
-                            color: Color(0xFF0A4D8C) 
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Iniciar Sesión',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 20, 
-                            fontWeight: FontWeight.w600
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
                         TextFormField(
                           controller: _emailCtrl,
                           keyboardType: TextInputType.emailAddress,
-                          textInputAction: TextInputAction.next,
-                          decoration: _decor('Correo electrónico', hint: 'ejemplo@correo.com'),
-                          validator: (v) {
-                            if (v?.trim().isEmpty ?? true) return 'El correo es obligatorio';
-                            if (!v!.contains('@')) return 'Ingrese un correo válido';
-                            return null;
-                          },
+                          decoration: InputDecoration(
+                            labelText: 'Correo Electrónico',
+                            prefixIcon: const Icon(Icons.email_outlined, color: Colors.grey),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            filled: true,
+                            fillColor: const Color(0xFFF5F5F5),
+                          ),
+                          validator: (v) => (v?.isEmpty ?? true) ? 'Obligatorio' : null,
                         ),
                         const SizedBox(height: 16),
-
                         TextFormField(
                           controller: _passwordCtrl,
-                          obscureText: true,
-                          textInputAction: TextInputAction.done,
-                          decoration: _decor('Contraseña', hint: 'Ingrese su contraseña'),
-                          validator: (v) {
-                            if (v?.isEmpty ?? true) return 'La contraseña es obligatoria';
-                            return null;
-                          },
+                          obscureText: _obscureText,
+                          decoration: InputDecoration(
+                            labelText: 'Contraseña',
+                            prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
+                            suffixIcon: IconButton(
+                              icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility),
+                              onPressed: () => setState(() => _obscureText = !_obscureText),
+                            ),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            filled: true,
+                            fillColor: const Color(0xFFF5F5F5),
+                          ),
+                          validator: (v) => (v?.isEmpty ?? true) ? 'Obligatorio' : null,
                         ),
                         const SizedBox(height: 24),
-
                         SizedBox(
-                          height: 48,
+                          width: double.infinity,
+                          height: 50,
                           child: ElevatedButton(
                             onPressed: isLoading ? null : _submit,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0A4D8C),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                              backgroundColor: _primaryColor,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
-                            child: isLoading
-                                ? const SizedBox(
-                                    width: 24, 
-                                    height: 24, 
-                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                                  )
-                                : const Text('Iniciar Sesión'),
-                          ),
-                        ),
-
-                        const SizedBox(height: 16),
-                        
-                        TextButton(
-                          onPressed: () => Navigator.pushNamed(context, '/register'),
-                          child: const Text(
-                            '¿No tienes cuenta? Registrarse',
-                            style: TextStyle(color: Color(0xFF0A4D8C), fontWeight: FontWeight.bold),
+                            child: isLoading 
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : const Text('Iniciar Sesión', style: TextStyle(fontWeight: FontWeight.bold)),
                           ),
                         ),
                       ],
@@ -190,7 +138,12 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-            ),
+              const SizedBox(height: 20),
+              TextButton(
+                onPressed: () => Navigator.pushNamed(context, '/register'),
+                child: Text('¿No tienes cuenta? Regístrate', style: TextStyle(color: _primaryColor, fontWeight: FontWeight.bold)),
+              ),
+            ],
           ),
         ),
       ),

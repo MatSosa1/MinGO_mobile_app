@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart'; // IMPORTANTE
+import 'package:mingo/src/presentation/pages/categorized_phrases_page.dart';
 import 'package:provider/provider.dart';
 
 // Imports de Capas de Datos y Dominio
@@ -79,23 +80,36 @@ class MyApp extends StatelessWidget {
         Locale('en'), // Inglés (opcional)
       ],
       // -------------------------------------
-
       initialRoute: '/login', 
+      
       routes: {
+        // --- AUTENTICACIÓN ---
         '/login': (_) => const LoginPage(),
         '/register': (_) => const RegisterPage(),
+        
         '/knowledge_form': (_) => const KnowledgeFormPage(),
         
-        // RF005: Ruta generada por Factory para "Frases Comunes"
-        '/categorized_phrases': (_) => contentFactory.createPage(SignSection.FrasesComunes),
+        // --- NAVEGACIÓN PRINCIPAL (NUEVO DASHBOARD) ---
+        '/home': (_) => const HomePage(),
         
-        // RF004: Ruta para importar contenido
-        '/import_content': (_) => const ImportContentPage(),
+        // --- CONTENIDO EDUCATIVO (LISTAS) ---
+        '/categorized_phrases_list': (_) => contentFactory.createPage(SignSection.FrasesComunes),
 
-        // Futuros RF008 (Aprendizaje por Niveles) usando el mismo Factory
         '/level_beginner': (_) => contentFactory.createPage(SignSection.Principiante),
         '/level_intermediate': (_) => contentFactory.createPage(SignSection.Intermedio),
         '/level_advanced': (_) => contentFactory.createPage(SignSection.Avanzado),
+
+        // --- FUNCIONES DE DOCENTE ---
+        '/import_content': (_) => const ImportContentPage(),
+        
+        // --- RUTAS PENDIENTES / PLACEHOLDERS ---
+        // Estas rutas son necesarias para que los botones del Dashboard no den error.
+        // Puedes implementar las pantallas reales luego.
+      
+        '/link_class': (_) => Scaffold(
+          appBar: AppBar(title: const Text("Enlazar Clase")),
+          body: const Center(child: Text("Pantalla de Enlazar Clase (Pendiente)")),
+        ),
       },
     );
   }
