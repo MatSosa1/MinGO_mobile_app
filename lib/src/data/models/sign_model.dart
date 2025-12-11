@@ -39,7 +39,7 @@ class SignModel extends Sign {
       'sign_image_url': signImageUrl,
       'sign_section': signSection.name,
       'tag_id': tagId,
-      'synonyms': synonyms ?? [], 
+      'synonyms': synonyms ?? [],
     };
   }
 }

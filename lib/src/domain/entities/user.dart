@@ -4,6 +4,7 @@ class User {
   final String email; 
   final DateTime birthDate;
   final String knowledgeLevel;
+  final bool firstTimeLogin;
   final int role;
 
   const User({
@@ -12,6 +13,7 @@ class User {
     required this.email,
     required this.birthDate,
     required this.knowledgeLevel,
+    required this.firstTimeLogin,
     required this.role,
   });
 }

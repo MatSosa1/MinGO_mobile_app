@@ -10,6 +10,7 @@ class UserModel extends User {
     required super.birthDate,
     required super.knowledgeLevel,
     required super.role,
+    super.firstTimeLogin = true,
     this.password,
   });
 
@@ -20,6 +21,7 @@ class UserModel extends User {
       email: json['user_email'],
       birthDate: DateTime.parse(json['user_birth_date']),
       knowledgeLevel: json['user_knowledge_level'] ?? 'Principiante',
+      firstTimeLogin: json['user_first_time_login'],
       role: json['role_id'],
     );
   }
@@ -31,6 +33,7 @@ class UserModel extends User {
       'user_email': email,
       'user_birth_date': birthDate.toIso8601String(),
       'user_knowledge_level': knowledgeLevel,
+      'user_first_time_login': firstTimeLogin,
       'role_id': role,
     };
   }
