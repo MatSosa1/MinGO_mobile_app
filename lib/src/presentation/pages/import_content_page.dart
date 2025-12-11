@@ -16,23 +16,22 @@ class ImportContentPage extends StatefulWidget {
 
 class _ImportContentPageState extends State<ImportContentPage> {
   final _formKey = GlobalKey<FormState>();
-
+  
+  // Repositorios
   late final SignRepositoryImpl _signRepository;
   late final TagRepositoryImpl _tagRepository;
 
   bool _isLoading = false;
   List<Tag> _tags = [];
   
-  // Campos del Formulario
-  String? _title;       
-  String? _description; // Guardará la "Frase Exacta" u "Oración de Ejemplo"
+  // Datos del formulario
+  String? _title;
+  String? _description; 
   String? _videoUrl;    
-  String? _imageUrl;    
-  SignSection? _section; 
+  String? _imageUrl;
+  SignSection? _section;
   int? _selectedTagId;
-  String? _synonymsText; // Para capturar los sinónimos como texto (coma separado)
-
-  final List<SignSection> _sections = SignSection.values;
+  String? _keywords;
 
   @override
   void initState() {
@@ -43,6 +42,7 @@ class _ImportContentPageState extends State<ImportContentPage> {
   }
 
   Future<void> _loadTags() async {
+    // Simulación de carga de tags/categorías
     setState(() => _isLoading = true);
     try {
       final tags = await _tagRepository.getAllTags();
@@ -60,166 +60,158 @@ class _ImportContentPageState extends State<ImportContentPage> {
       _formKey.currentState!.save();
       setState(() => _isLoading = true);
 
-      // Procesar sinónimos (separados por coma)
-      List<String> synonymsList = [];
-      if (_synonymsText != null && _synonymsText!.isNotEmpty) {
-        synonymsList = _synonymsText!.split(',').map((e) => e.trim()).toList();
-      }
+      // Conversión de palabras clave
+      List<String> synonyms = _keywords?.split(',').map((e) => e.trim()).toList() ?? [];
 
       final newSign = SignModel(
         signTitle: _title!,
-        description: _description!, // Campo obligatorio nuevo
-        signVideoUrl: _videoUrl!,
+        description: _description!,
+        signVideoUrl: _videoUrl ?? "http://video.placeholder", // Valor por defecto si es simulación
         signImageUrl: _imageUrl,
         signSection: _section!,
         tagId: _selectedTagId!,
-        synonyms: synonymsList, // Enviamos lista al backend
+        synonyms: synonyms,
       );
 
       try {
         await _signRepository.createSign(newSign);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Contenido validado y registrado exitosamente")),
-        );
-        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Contenido importado exitosamente")));
+        setState(() => _isLoading = false);
       } catch (e) {
         setState(() => _isLoading = false);
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e")),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
       }
     }
   }
 
-  InputDecoration _decor(String label, {String? hint, IconData? icon}) {
-    return InputDecoration(
-      labelText: label,
-      hintText: hint,
-      prefixIcon: icon != null ? Icon(icon, color: Colors.blue.shade700) : null,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFE6F3FF),
+      appBar: AppBar(
+        title: const Text("Importar Contenido"),
+        backgroundColor: const Color(0xFF0A4D8C),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("Archivos Multimedia", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 10),
+              
+              // Botones de Carga (UI-08)
+              Row(
+                children: [
+                  Expanded(
+                    child: _uploadButton(Icons.videocam, "Subir Video", () {
+                      // Lógica de carga de video
+                      _videoUrl = "video_cargado.mp4"; 
+                    }),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _uploadButton(Icons.image, "Subir Imagen", () {}),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              const Divider(),
+              const SizedBox(height: 10),
+
+              const Text("Detalles del Contenido", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 15),
+
+              // Título
+              _buildField("Título del Contenido", "Ej. Saludo", (v) => _title = v),
+              const SizedBox(height: 15),
+
+              // Categoría (Tag)
+              DropdownButtonFormField<int>(
+                decoration: _inputDecor("Categoría de la Seña"),
+                items: _tags.map((t) => DropdownMenuItem(value: t.id, child: Text(t.tagName))).toList(),
+                onChanged: (v) => setState(() => _selectedTagId = v),
+                validator: (v) => v == null ? "Requerido" : null,
+              ),
+              const SizedBox(height: 15),
+
+              // Sección/Nivel
+              DropdownButtonFormField<SignSection>(
+                decoration: _inputDecor("Nivel Educativo / Sección"),
+                items: SignSection.values.map((s) => DropdownMenuItem(value: s, child: Text(s.name))).toList(),
+                onChanged: (v) => setState(() => _section = v),
+                validator: (v) => v == null ? "Requerido" : null,
+              ),
+              const SizedBox(height: 15),
+
+              // Frase Asociada (Condicional según RF004)
+              _buildField(
+                _section == SignSection.FrasesComunes ? "Frase Exacta" : "Oración de Ejemplo",
+                "Ingresa el texto asociado...",
+                (v) => _description = v,
+                maxLines: 2
+              ),
+              const SizedBox(height: 15),
+
+              // Palabras Clave
+              _buildField("Palabras Clave (Separadas por coma)", "Ej. Casa, Hogar", (v) => _keywords = v),
+
+              const SizedBox(height: 30),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0099FF),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: _isLoading 
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text("Importar Contenido", style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // LÓGICA CONDICIONAL DE UI SEGÚN REQUISITO
-    String descLabel = "Oración de Ejemplo";
-    String descHint = "Ej. Adoro esa silla roja";
-    
-    if (_section == SignSection.FrasesComunes) {
-      descLabel = "Frase Exacta";
-      descHint = "Ej. ¿Cómo te sientes?";
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Importar Contenido"),
-        backgroundColor: Colors.blue.shade700,
-        foregroundColor: Colors.white,
+  Widget _uploadButton(IconData icon, String label, VoidCallback onTap) {
+    return ElevatedButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, color: const Color(0xFF0099FF)),
+      label: Text(label, style: const TextStyle(color: Color(0xFF0099FF))),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        elevation: 1,
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
-      body: _isLoading && _tags.isEmpty
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text("Metadatos del Contenido", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 16),
+    );
+  }
 
-                    // 1. TÍTULO (Siempre visible)
-                    TextFormField(
-                      decoration: _decor("Título de la Seña", hint: "Ej. Silla, Saludo", icon: Icons.title),
-                      validator: (v) => (v == null || v.isEmpty) ? "Obligatorio" : null,
-                      onSaved: (v) => _title = v,
-                    ),
-                    const SizedBox(height: 16),
+  Widget _buildField(String label, String hint, Function(String?) onSaved, {int maxLines = 1}) {
+    return TextFormField(
+      decoration: _inputDecor(label, hint: hint),
+      maxLines: maxLines,
+      onSaved: onSaved,
+      validator: (v) => (v?.isEmpty ?? true) ? "Requerido" : null,
+    );
+  }
 
-                    // 2. SECCIÓN (Define el comportamiento del siguiente campo)
-                    DropdownButtonFormField<SignSection>(
-                      decoration: _decor("Sección de destino", icon: Icons.category),
-                      items: _sections.map((s) => DropdownMenuItem(value: s, child: Text(s.name))).toList(),
-                      onChanged: (v) => setState(() => _section = v),
-                      validator: (v) => v == null ? "Seleccione una sección" : null,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // 3. CAMPO CONDICIONAL (Frase vs Oración)
-                    // Solo se muestra si ya se seleccionó una sección para dar contexto
-                    if (_section != null) ...[
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: TextFormField(
-                          key: ValueKey(_section), // Fuerza redibujado al cambiar sección
-                          decoration: _decor(descLabel, hint: descHint, icon: Icons.description),
-                          maxLines: 2,
-                          validator: (v) => (v == null || v.isEmpty) ? "Este campo es obligatorio para la sección seleccionada" : null,
-                          onSaved: (v) => _description = v,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // 4. CATEGORÍA (Tag)
-                    DropdownButtonFormField<int>(
-                      decoration: _decor("Categoría (Tag)", icon: Icons.label),
-                      items: _tags.map((t) => DropdownMenuItem(value: t.id, child: Text(t.tagName))).toList(),
-                      onChanged: (v) => setState(() => _selectedTagId = v),
-                      validator: (v) => v == null ? "Seleccione una categoría" : null,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // 5. SINÓNIMOS (Opcional)
-                    TextFormField(
-                      decoration: _decor("Palabras clave / Sinónimos (Opcional)", hint: "Separados por coma (Ej. Asiento, Butaca)", icon: Icons.abc),
-                      onSaved: (v) => _synonymsText = v,
-                    ),
-                    const SizedBox(height: 24),
-
-                    const Text("Multimedia", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 16),
-
-                    // 6. VIDEO (Obligatorio)
-                    TextFormField(
-                      decoration: _decor("URL del Video", hint: "https://...", icon: Icons.video_library),
-                      validator: (v) => (v == null || v.isEmpty) ? "El video es obligatorio" : null,
-                      onSaved: (v) => _videoUrl = v,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // 7. IMAGEN (Opcional)
-                    TextFormField(
-                      decoration: _decor("URL de Imagen (Opcional)", hint: "https://...", icon: Icons.image),
-                      onSaved: (v) => _imageUrl = (v != null && v.isNotEmpty) ? v : null,
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton.icon(
-                        icon: _isLoading 
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white)) 
-                          : const Icon(Icons.save),
-                        label: Text(_isLoading ? "Validando..." : "Guardar Contenido"),
-                        onPressed: _isLoading ? null : _submit,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue.shade700,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+  InputDecoration _inputDecor(String label, {String? hint}) {
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      filled: true,
+      fillColor: const Color(0xFFF5F5F5),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }
 }
